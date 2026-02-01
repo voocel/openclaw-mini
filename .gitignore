@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.mini-agent/
+*.log
+.DS_Store
