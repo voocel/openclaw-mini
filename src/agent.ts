@@ -46,6 +46,7 @@ import { emitAgentEvent } from "./agent-events.js";
 // ============== 类型定义 ==============
 
 export interface AgentConfig {
+  /** Custom API endpoint (e.g. ZhipuAI BigModel). Fallback to ANTHROPIC_BASE_URL env if unset */
   baseURL?: string;
   /** Anthropic API Key */
   apiKey: string;
@@ -177,7 +178,10 @@ export class Agent {
   private enableHeartbeat: boolean;
 
   constructor(config: AgentConfig) {
-    this.client = new Anthropic({ baseURL: config.baseURL, apiKey: config.apiKey });
+    this.client = new Anthropic({
+      ...(config.baseURL ? { baseURL: config.baseURL } : {}),
+      apiKey: config.apiKey,
+    });
     this.model = config.model ?? "claude-sonnet-4-20250514";
     this.agentId = normalizeAgentId(config.agentId ?? "main");
     this.baseSystemPrompt = config.systemPrompt ?? DEFAULT_SYSTEM_PROMPT;
