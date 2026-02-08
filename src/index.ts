@@ -12,6 +12,12 @@
 // Agent 核心
 export { Agent, type AgentConfig, type AgentCallbacks, type RunResult } from "./agent.js";
 
+// Agent Loop
+export { runAgentLoop, type AgentLoopParams, type AgentLoopCallbacks, type AgentLoopResult } from "./agent-loop.js";
+
+// 消息格式转换
+export { convertMessagesToPi } from "./message-convert.js";
+
 // 事件流
 export {
   type AgentEventStream,

@@ -108,6 +108,20 @@ export function resolveSessionLane(sessionKey: string): string {
   return cleaned.startsWith("session:") ? cleaned : `session:${cleaned}`;
 }
 
+/**
+ * 清理指定 lane（队列为空且无活跃任务时从 Map 移除）
+ *
+ * 典型调用时机:
+ * - session 结束后清理 session lane
+ * - Agent 销毁前清理 global lane
+ */
+export function deleteLane(lane: string): boolean {
+  const state = lanes.get(lane);
+  if (!state) return false;
+  if (state.active > 0 || state.queue.length > 0) return false;
+  return lanes.delete(lane);
+}
+
 export function resolveGlobalLane(lane?: string): string {
   const cleaned = lane?.trim();
   return cleaned ? cleaned : "main";

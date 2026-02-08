@@ -35,6 +35,11 @@ export function emitAgentEvent(event: Omit<AgentEventPayload, "seq" | "ts">) {
       // 忽略监听器错误，避免影响主流程
     }
   }
+  // run 结束时清理序号计数器，防止长时间运行时泄漏
+  const data = event.data as { phase?: string };
+  if (data.phase === "end" || data.phase === "error") {
+    seqByRun.delete(event.runId);
+  }
 }
 
 export function onAgentEvent(listener: (evt: AgentEventPayload) => void): () => void {

@@ -102,7 +102,15 @@ export function isToolAllowed(name: string, policy?: ToolPolicy): boolean {
 
 export function filterToolsByPolicy(tools: Tool[], policy?: ToolPolicy): Tool[] {
   if (!policy) return tools;
-  return tools.filter((tool) => isToolAllowed(tool.name, policy));
+  // 预编译一次，避免 N 个工具重复编译 N 次
+  const deny = compilePatterns(policy.deny ?? []);
+  const allow = compilePatterns(policy.allow ?? []);
+  return tools.filter((tool) => {
+    const normalized = normalizeToolName(tool.name);
+    if (matchesAny(normalized, deny)) return false;
+    if (allow.length === 0) return true;
+    return matchesAny(normalized, allow);
+  });
 }
 
 export function mergeToolPolicies(base?: ToolPolicy, extra?: ToolPolicy): ToolPolicy | undefined {

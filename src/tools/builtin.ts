@@ -3,7 +3,7 @@
  *
  * 对应 OpenClaw 源码: src/tools/ 目录 (50+ 工具)
  *
- * 这里只实现了 9 个最基础的工具，覆盖了 Agent 的核心能力:
+ * 这里实现了 10 个最基础的工具，覆盖了 Agent 的核心能力:
  * - read: 读取文件 (感知代码)
  * - write: 写入文件 (创建代码)
  * - edit: 编辑文件 (修改代码)
@@ -12,6 +12,7 @@
  * - grep: 搜索文件 (定位代码)
  * - memory_search: 记忆检索 (历史召回)
  * - memory_get: 记忆读取 (按需拉取)
+ * - memory_save: 记忆写入 (长期保存)
  * - sessions_spawn: 子代理触发
  *
  * 设计原则:
@@ -630,10 +631,10 @@ export const sessionsSpawnTool: Tool<{
 /**
  * 所有内置工具
  *
- * 这 9 个工具覆盖了 Agent 的核心能力:
+ * 这 10 个工具覆盖了 Agent 的核心能力:
  * - 感知: read, list, grep
  * - 行动: write, edit, exec
- * - 记忆: memory_search, memory_get
+ * - 记忆: memory_search, memory_get, memory_save
  * - 编排: sessions_spawn
  *
  * OpenClaw 有 50+ 工具，包括:

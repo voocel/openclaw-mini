@@ -136,9 +136,9 @@ function matchesAny(message: string, patterns: string[]): boolean {
  */
 export function isContextOverflowError(message?: string): boolean {
   if (!message) return false;
-  const lower = message.toLowerCase();
-  if (matchesAny(lower, CONTEXT_OVERFLOW_PATTERNS)) return true;
+  if (matchesAny(message, CONTEXT_OVERFLOW_PATTERNS)) return true;
   // 413 + "too large" 组合
+  const lower = message.toLowerCase();
   if (lower.includes("413") && lower.includes("too large")) return true;
   return false;
 }
