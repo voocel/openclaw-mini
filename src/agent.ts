@@ -462,6 +462,14 @@ export class Agent {
     if (this.enableSkills) {
       const skillsPrompt = await this.skills.buildSkillsPrompt();
       if (skillsPrompt) {
+        // 对齐 OpenClaw: system-prompt.ts → buildSkillsSection()
+        // 结构化行为指令，告诉模型如何使用技能
+        prompt += "\n\n## Skills (mandatory)";
+        prompt += "\nBefore replying: scan <available_skills> <description> entries.";
+        prompt += "\n- If exactly one skill clearly applies: read its SKILL.md at <location> with `read`, then follow it.";
+        prompt += "\n- If multiple could apply: choose the most specific one, then read/follow it.";
+        prompt += "\n- If none clearly apply: do not read any SKILL.md.";
+        prompt += "\nConstraints: never read more than one skill up front; only read after selecting.";
         prompt += skillsPrompt;
       }
     }
@@ -565,15 +573,18 @@ export class Agent {
           let processedMessage = userMessage;
           let skillTriggered: string | undefined;
 
-          // 技能匹配
+          // 技能匹配（对应 OpenClaw: auto-reply/skill-commands.ts → model dispatch 路径）
+          // /command args → 改写消息，引导模型读取对应 SKILL.md
           if (this.enableSkills) {
             const match = await this.skills.match(userMessage);
             if (match) {
               callbacks?.onSkillMatch?.(match);
-              skillTriggered = match.skill.id;
-              const trigger = match.matchedTrigger || "";
-              const userPart = userMessage.slice(trigger.length).trim() || userMessage;
-              processedMessage = `${match.skill.prompt}\n\n用户请求: ${userPart}`;
+              skillTriggered = match.command.skillName;
+              // 对齐 OpenClaw: 改写消息告诉模型使用哪个技能
+              // 模型收到后扫描 <available_skills>，找到对应 skill，
+              // 通过 read 工具加载 SKILL.md 并遵循其指令
+              const userInput = match.args ?? "";
+              processedMessage = `Use the "${match.command.skillName}" skill for this request.\n\nUser input:\n${userInput}`;
             }
           }
 

@@ -55,7 +55,14 @@ export {
 export { ContextLoader, type ContextFile } from "./context/index.js";
 
 // 技能系统
-export { SkillManager, type Skill, type SkillMatch } from "./skills.js";
+export {
+  SkillManager,
+  type Skill,
+  type SkillMatch,
+  type SkillEntry,
+  type SkillCommandSpec,
+  type SkillInvocationPolicy,
+} from "./skills.js";
 
 // 主动唤醒
 export {
