@@ -15,7 +15,7 @@
     "example": "tsx examples/basic.ts"
   },
   "dependencies": {
-    "@mariozechner/pi-ai": "0.50.7"
+    "@mariozechner/pi-ai": "^0.55.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

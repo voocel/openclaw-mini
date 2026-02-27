@@ -281,6 +281,9 @@ export class Agent {
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
         contextWindow: 200_000,
         maxTokens: 8192,
+        compat: {
+          supportsDeveloperRole: false
+        }
       };
     }
     if (!modelDef) {
