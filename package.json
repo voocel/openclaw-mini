@@ -13,12 +13,18 @@
     "start": "node dist/cli.js",
     "chat": "tsx src/cli.ts chat",
     "example": "tsx examples/basic.ts",
-    "feishu": "tsx examples/feishu-channel.ts"
+    "feishu": "tsx examples/feishu-channel.ts",
+    "trader:test": "npx tsx examples/trader-example.ts",
+    "image:test": "npx tsx examples/test.ts"
   },
   "dependencies": {
     "@larksuiteoapi/node-sdk": "^1.59.0",
     "@mariozechner/pi-ai": "^0.55.1",
-    "dotenv": "^17.3.1"
+    "axios": "^1.13.6",
+    "axios-cookiejar-support": "^6.0.5",
+    "dotenv": "^17.3.1",
+    "tesseract.js": "^7.0.0",
+    "tough-cookie": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
