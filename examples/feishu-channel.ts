@@ -65,11 +65,11 @@ async function main() {
 
   // 设置渠道管理器到 Agent 上下文
   const sessionId = "feishu-example";
-  const context = await agent.getSessionContext(sessionId);
-  context.metadata = {
-    ...context.metadata,
-    channelManager,
-  };
+  // const context = await agent.getSessionContext(sessionId);
+  // context.metadata = {
+  //   ...context.metadata,
+  //   channelManager,
+  // };
 
   // 订阅事件
   const unsubscribe = agent.subscribe((event) => {

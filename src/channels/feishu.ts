@@ -199,7 +199,7 @@ export class FeishuChannel implements Channel {
         throw new Error(`Failed to get access token: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as { code: number; msg: string; tenant_access_token?: string; expire?: number };
       
       if (data.code !== 0) {
         throw new Error(`Feishu API error: ${data.msg}`);
@@ -254,7 +254,7 @@ export class FeishuChannel implements Channel {
       throw new Error(`Feishu API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as { code: number; msg: string; data?: any };
     
     if (data.code !== 0) {
       throw new Error(`Feishu API error: ${data.msg}`);
