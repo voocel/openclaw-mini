@@ -260,10 +260,34 @@ export const execTool: Tool<{ command: string; timeout?: number }> = {
         try { child.kill(); } catch { /* ignore */ }
       }, timeout);
 
+      /**
+       * 输出积累与截断
+       *
+       * 对应 OpenClaw: bash-process-registry.ts → appendOutput()
+       * - 上限 200KB (PI_BASH_MAX_OUTPUT_CHARS，可配)
+       * - 截断策略: 保留尾部（错误信息通常在末尾）
+       * - truncated 标记通知 Agent
+       *
+       * Mini 简化: 单缓冲 + 尾部保留，省略 8KB 分块和双缓冲
+       */
+      const MAX_OUTPUT_CHARS = 200_000;
       let stdout = "";
       let stderr = "";
-      child.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
-      child.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
+      let truncated = false;
+      child.stdout.on("data", (chunk: Buffer) => {
+        stdout += chunk.toString();
+        if (stdout.length > MAX_OUTPUT_CHARS) {
+          stdout = stdout.slice(stdout.length - MAX_OUTPUT_CHARS);
+          truncated = true;
+        }
+      });
+      child.stderr.on("data", (chunk: Buffer) => {
+        stderr += chunk.toString();
+        if (stderr.length > MAX_OUTPUT_CHARS) {
+          stderr = stderr.slice(stderr.length - MAX_OUTPUT_CHARS);
+          truncated = true;
+        }
+      });
 
       const exitCode = await new Promise<number | null>((resolve) => {
         child.on("close", (code) => resolve(code));
@@ -277,6 +301,9 @@ export const execTool: Tool<{ command: string; timeout?: number }> = {
       if (stderr) result += `\n[STDERR]\n${stderr}`;
       if (exitCode !== null && exitCode !== 0) {
         result += `\n[EXIT CODE] ${exitCode}`;
+      }
+      if (truncated) {
+        result += `\n[OUTPUT TRUNCATED: exceeded ${MAX_OUTPUT_CHARS} chars, kept tail]`;
       }
 
       return result.slice(0, 30000);

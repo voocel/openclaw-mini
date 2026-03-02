@@ -213,8 +213,8 @@ function softTrimToolResultBlock(
     return { block, trimmed: false };
   }
 
-  // 工具可修剪性检查
-  if (block.tool_use_id && !isPrunable(block.tool_use_id)) {
+  // 工具可修剪性检查（用工具名，不是 tool_use_id）
+  if (block.name && !isPrunable(block.name)) {
     return { block, trimmed: false };
   }
 
@@ -287,7 +287,7 @@ function countPrunableToolChars(
     for (const block of msg.content) {
       if (block.type !== "tool_result") continue;
       if (isToolResultProtected(block)) continue;
-      if (block.tool_use_id && !isPrunable(block.tool_use_id)) continue;
+      if (block.name && !isPrunable(block.name)) continue;
       const text = typeof block.content === "string" ? block.content : "";
       total += text.length;
     }
@@ -345,7 +345,7 @@ function applyHardClear(
         typeof block.content === "string" &&
         block.content.length > 0
       ) {
-        const canPrune = !block.tool_use_id || isPrunable(block.tool_use_id);
+        const canPrune = !block.name || isPrunable(block.name);
 
         if (canPrune) {
           // 比例已降到阈值以下时停止

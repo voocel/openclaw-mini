@@ -30,6 +30,8 @@ import {
   type Skill,
   loadSkillsFromDir,
   formatSkillsForPrompt,
+  extractFrontmatter,
+  parseBool,
 } from "./skill-primitives.js";
 
 // Re-export SDK 类型供外部使用
@@ -105,34 +107,7 @@ export interface SkillMatch {
 }
 
 // ============== Frontmatter 解析 (对应 openclaw frontmatter.ts) ==============
-
-/**
- * 解析 frontmatter 为键值对
- *
- * 对应 OpenClaw: parseFrontmatter() → parseFrontmatterBlock()
- * OpenClaw 在 SDK 之外有自己的 frontmatter 解析器，
- * 用于提取 SDK 不关心的元数据字段（调用策略等）
- */
-function parseFrontmatter(content: string): ParsedSkillFrontmatter {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return {};
-  const result: ParsedSkillFrontmatter = {};
-  for (const line of match[1].split("\n")) {
-    const kv = line.match(/^([a-zA-Z][\w-]*):\s*(.+)$/);
-    if (kv) {
-      result[kv[1]] = kv[2].replace(/^["']|["']$/g, "");
-    }
-  }
-  return result;
-}
-
-function parseBool(value: string | undefined, fallback: boolean): boolean {
-  if (value === undefined) return fallback;
-  const v = value.trim().toLowerCase();
-  if (v === "true" || v === "yes" || v === "1") return true;
-  if (v === "false" || v === "no" || v === "0") return false;
-  return fallback;
-}
+// extractFrontmatter 和 parseBool 复用 skill-primitives.ts 的实现（SDK 层原语）
 
 /** 对应 OpenClaw: resolveSkillInvocationPolicy() */
 function resolveInvocationPolicy(fm: ParsedSkillFrontmatter): SkillInvocationPolicy {
@@ -184,7 +159,7 @@ async function loadSkillEntries(
     let frontmatter: ParsedSkillFrontmatter = {};
     try {
       const raw = await fs.readFile(skill.filePath, "utf-8");
-      frontmatter = parseFrontmatter(raw);
+      frontmatter = extractFrontmatter(raw);
     } catch {
       // ignore
     }

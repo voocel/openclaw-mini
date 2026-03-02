@@ -162,7 +162,7 @@ async function loadSkillFromFile(
  * - SDK 层只需提取 name/description/disable-model-invocation
  *   编排层（skills.ts）会重读文件用自己的解析器提取更多字段
  */
-function extractFrontmatter(content: string): Record<string, string> {
+export function extractFrontmatter(content: string): Record<string, string> {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return {};
   const result: Record<string, string> = {};
@@ -175,7 +175,7 @@ function extractFrontmatter(content: string): Record<string, string> {
   return result;
 }
 
-function parseBool(value: string | undefined, fallback: boolean): boolean {
+export function parseBool(value: string | undefined, fallback: boolean): boolean {
   if (value === undefined) return fallback;
   const v = value.trim().toLowerCase();
   if (v === "true" || v === "yes" || v === "1") return true;
