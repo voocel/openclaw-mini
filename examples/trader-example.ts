@@ -13,9 +13,7 @@ async function main() {
     console.log('=== 东方财富交易客户端示例 ===');
 
     // 创建交易客户端
-    const trader = new EastMoneyTrader({
-        initial_assets: 1000000  // 初始资产倍数
-    });
+    const trader = new EastMoneyTrader({});
 
     try {
         // 准备账户（模拟账户，实际需要真实账户）

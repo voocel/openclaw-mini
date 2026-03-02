@@ -76,11 +76,6 @@ function encryptData(pwd: string): string {
  */
 export interface EastMoneyTraderOptions {
     /**
-     * 初始资产倍数
-     */
-    initial_assets?: number;
-
-    /**
      * 验证码识别器
      * 如果不提供，将使用默认识别器
      */
@@ -90,7 +85,6 @@ export interface EastMoneyTraderOptions {
 export class EastMoneyTrader extends WebTrader {
     protected config: EastMoneyConfig = eastMoneyConfig;
     private validateKey: string | null = null;
-    private multiple: number = 1000000;
     private sessionFile: string = 'eastmoney_trader.session';
     private randomNumber: string = '0.9033461201665647898';
     private captchaRecognizer: CaptchaRecognizerObject;
@@ -98,7 +92,6 @@ export class EastMoneyTrader extends WebTrader {
 
     // HTTP会话
     private session: any; // 使用简单的对象存储cookie等，实际可使用fetch with cookie jar
-
     constructor(options?: EastMoneyTraderOptions) {
         super();
 
@@ -109,14 +102,7 @@ export class EastMoneyTrader extends WebTrader {
             headers: HEADERS,
             withCredentials: true  // 关键：发送 cookies
         }));
-
-        // 资金换算倍数
-        if (options?.initial_assets !== undefined) {
-            if (typeof options.initial_assets !== 'number') {
-                throw new TypeError('initial assets must be number');
-            }
-            this.multiple = options.initial_assets;
-        }
+        this.session = jar;
 
         // 验证码识别器
         if (options?.captchaRecognizer) {
@@ -126,10 +112,6 @@ export class EastMoneyTrader extends WebTrader {
             this.captchaRecognizer = new CaptchaRecognizer();
         }
 
-        // 尝试恢复会话
-        if (!this._reloadSession()) {
-            this.session = {}; // 初始化会话对象
-        }
     }
 
     /**
@@ -191,10 +173,10 @@ export class EastMoneyTrader extends WebTrader {
     /**
      * 保存会话到缓存文件
      */
-    private _saveSession(): void {
+    private async _saveSession(): Promise<void> {
         const sessionData = {
             validateKey: this.validateKey,
-            cookies: this.getCookies(),
+            cookies: await this.getCookies(),
             timestamp: Date.now()
         };
 
@@ -209,18 +191,34 @@ export class EastMoneyTrader extends WebTrader {
     /**
      * 从缓存文件恢复会话
      */
-    private _reloadSession(): boolean {
+    private async _reloadSession(): Promise<boolean> {
         try {
             if (fs.existsSync(this.sessionFile)) {
                 const data = fs.readFileSync(this.sessionFile, 'utf8');
                 const sessionData = JSON.parse(data);
                 this.validateKey = sessionData.validateKey;
-                this.restoreCookies(sessionData.cookies);
-                console.log(`通过会话文件${this.sessionFile}恢复Session`);
-                return true;
+                const cookies = sessionData.cookies;
+                // 反序列化到新 CookieJar
+                const restoredJar = await CookieJar.deserialize({ cookies });
+                const nowTime = Date.now()
+                // 过滤过期 cookies（关键！）
+                const validCookies = restoredJar.getCookiesSync(eastMoneyConfig.domain).filter(c => {
+                    return c.expiryDate()?.getTime() || 0 > nowTime
+                });
+                if (validCookies.length === 0) {
+                    console.log('⚠️  所有 cookies 已过期，跳过恢复');
+                    return false;
+                } else {
+                    // 恢复 cookies
+                    this.session = restoredJar;
+                    (this.client.defaults as any).jar = this.session;
+                    console.log(`通过会话文件${this.sessionFile}恢复Session`);
+                    return true;
+                }
             }
         } catch (error) {
             console.error('加载会话失败:', error);
+            return false;
         }
         return false;
     }
@@ -228,36 +226,33 @@ export class EastMoneyTrader extends WebTrader {
     /**
      * 获取当前cookies
      */
-    private getCookies(): Record<string, string> {
+    private async getCookies(): Promise<Record<string, string>> {
+        // 获取当前cookies
+        if (!this.session) return Promise.resolve({});
         // 简化实现，实际需要从HTTP客户端获取cookies
-        return this.session.cookies || {};
-    }
-
-    /**
-     * 恢复cookies
-     */
-    private restoreCookies(cookies: Record<string, string>): void {
-        this.session.cookies = cookies;
+        try {
+            // 序列化 CookieJar（保留所有属性）
+            const serialized = await this.session.serialize({ format: 'json' });
+            return serialized.cookies;
+        } catch (error) {
+            console.error('序列化CookieJar失败:', error);
+            throw error;
+        }
     }
 
     /**
      * 自动登录
      */
     async autoLogin(kwargs?: any): Promise<void> {
-        if (this.validateKey) {
-            try {
-                await this.heartbeat();
-                console.log('already logined in');
-                return;
-            } catch (error) {
-                console.log('heartbeat failed, login again');
-            }
+        if (await this._reloadSession()) {
+            return;
+        }
+
+        if (!this.accountConfig) {
+            throw new Error('账户配置未设置，请先调用 prepare 方法');
         }
 
         while (true) {
-            if (!this.accountConfig) {
-                throw new Error('账户配置未设置，请先调用 prepare 方法');
-            }
 
             const password = encryptData(this.accountConfig.password);
             const identifyCode = await this._recognizeVerificationCode();
@@ -394,18 +389,6 @@ export class EastMoneyTrader extends WebTrader {
                 '人民币'                         // 币种
             )
         ];
-    }
-
-    /**
-     * 时间戳转字符串
-     */
-    private _timeStrftime(timeStamp: number): string {
-        try {
-            const date = new Date(timeStamp);
-            return date.toISOString().replace('T', ' ').substring(0, 19);
-        } catch (error) {
-            return new Date().toISOString().replace('T', ' ').substring(0, 19);
-        }
     }
 
     /**
@@ -571,6 +554,6 @@ export class EastMoneyTrader extends WebTrader {
      * 心跳检测
      */
     async heartbeat(): Promise<any> {
-        return await this.getBalance();
+        return await Promise.resolve();
     }
 }

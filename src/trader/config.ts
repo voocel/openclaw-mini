@@ -3,6 +3,7 @@
  */
 
 export interface EastMoneyConfig {
+    domain: string;
     assets: string;
     submit: string;
     revoke: string;
@@ -21,6 +22,7 @@ export interface EastMoneyConfig {
 }
 
 export const eastMoneyConfig: EastMoneyConfig = {
+    domain: "https://jywg.18.cn",
     assets: "https://jywg.18.cn/Com/queryAssetAndPositionV1?validatekey=%s",
     submit: "https://jywg.18.cn/Trade/SubmitTradeV2?validatekey=%s",
     revoke: "https://jywg.18.cn/Trade/RevokeOrders?validatekey=%s",

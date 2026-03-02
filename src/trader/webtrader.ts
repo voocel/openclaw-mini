@@ -3,25 +3,15 @@
  */
 
 import { Balance, Position, Entrust, Deal } from './model.js';
-import { TradeError, NotLoginError } from './exceptions.js';
+import { NotLoginError } from './exceptions.js';
 
 export abstract class WebTrader {
     protected config: any;
-    protected globalConfig: any;
     protected accountConfig: any;
     protected tradePrefix: string = '';
-    protected heartActive: boolean = true;
-    protected heartThread: NodeJS.Timeout | null = null;
 
     constructor(protected debug: boolean = true) {
         this.__readConfig();
-    }
-
-    /**
-     * 设置时间
-     */
-    setTime(time: Date): void {
-        // 占位实现
     }
 
     /**
@@ -78,7 +68,6 @@ export abstract class WebTrader {
                 throw new NotLoginError('登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常');
             }
         }
-        this.keepalive();
     }
 
     /**
@@ -89,60 +78,9 @@ export abstract class WebTrader {
     }
 
     /**
-     * 保持在线
-     */
-    keepalive(): void {
-        if (this.heartThread) {
-            this.heartActive = true;
-        } else {
-            this.heartThread = setInterval(() => {
-                if (this.heartActive) {
-                    this.checkLogin();
-                }
-            }, 10000);
-        }
-    }
-
-    /**
-     * 检查登录状态
-     */
-    async checkLogin(sleepy: number = 30): Promise<void> {
-        try {
-            const response = await this.heartbeat();
-            this.checkAccountLive(response);
-        } catch (error) {
-            console.error('心跳线程发现账户出现错误:', error);
-            await this.autoLogin();
-        } finally {
-            // 延迟
-            await new Promise(resolve => setTimeout(resolve, sleepy * 1000));
-        }
-    }
-
-    /**
-     * 心跳检测
-     */
-    async heartbeat(): Promise<any> {
-        return await this.getBalance();
-    }
-
-    /**
-     * 检查账户活跃状态
-     */
-    checkAccountLive(response: any): void {
-        // 默认实现，子类可覆盖
-    }
-
-    /**
      * 结束保持 token 在线的进程
      */
-    exit(): void {
-        this.heartActive = false;
-        if (this.heartThread) {
-            clearInterval(this.heartThread);
-            this.heartThread = null;
-        }
-    }
+    exit(): void { }
 
     /**
      * 读取配置
@@ -150,7 +88,6 @@ export abstract class WebTrader {
     private __readConfig(): void {
         // 占位实现，子类应该覆盖
         this.config = {};
-        this.globalConfig = {};
     }
 
     /**
@@ -235,16 +172,6 @@ export abstract class WebTrader {
             // 服务器强制登出
             return null;
         }
-        const returnData = this.fixErrorData(formatJsonData);
-        try {
-            this.checkLoginStatus(returnData);
-        } catch (error) {
-            if (error instanceof NotLoginError) {
-                await this.autoLogin();
-            }
-            throw error;
-        }
-        return returnData;
     }
 
     /**
