@@ -17,20 +17,6 @@ import type { Tool } from "./types.js";
 import { EastMoneyTrader } from "../trader/eastmoney.js";
 import { TradeError } from "../trader/exceptions.js";
 
-// 全局交易客户端实例（单例模式）
-let traderInstance: EastMoneyTrader | null = null;
-
-/**
- * 获取或创建交易客户端实例
- */
-async function getTrader(): Promise<EastMoneyTrader> {
-  if (!traderInstance) {
-    traderInstance = new EastMoneyTrader();
-  }
-  await traderInstance.ensureLoggedIn();
-  return traderInstance;
-}
-
 // ============== 登录工具 ==============
 
 export const traderLoginTool: Tool<{
@@ -45,7 +31,7 @@ export const traderLoginTool: Tool<{
   },
   async execute(input, _ctx) {
     try {
-      await getTrader();
+      await EastMoneyTrader.getInstance();
       return "登录成功";
     } catch (error) {
       return `登录失败：${(error as Error).message}`;
@@ -64,7 +50,7 @@ export const traderBalanceTool: Tool<{}> = {
   },
   async execute(_input, _ctx) {
     try {
-      const trader = await getTrader();
+      const trader = await EastMoneyTrader.getInstance();
       const balances = await trader.getBalance();
 
       if (!balances || balances.length === 0) {
@@ -99,7 +85,7 @@ export const traderPositionTool: Tool<{}> = {
   },
   async execute(_input, _ctx) {
     try {
-      const trader = await getTrader();
+      const trader = await EastMoneyTrader.getInstance();
       const positions = await trader.getPosition();
 
       if (!positions || positions.length === 0) {
@@ -134,7 +120,7 @@ export const traderEntrustTool: Tool<{}> = {
   },
   async execute(_input, _ctx) {
     try {
-      const trader = await getTrader();
+      const trader = await EastMoneyTrader.getInstance();
       const entrusts = await trader.getEntrust();
 
       if (!entrusts || entrusts.length === 0) {
@@ -170,7 +156,7 @@ export const traderDealTool: Tool<{}> = {
   },
   async execute(_input, _ctx) {
     try {
-      const trader = await getTrader();
+      const trader = await EastMoneyTrader.getInstance();
       const deals = await trader.getCurrentDeal();
 
       if (!deals || deals.length === 0) {
@@ -217,7 +203,7 @@ export const traderBuyTool: Tool<{
   },
   async execute(input, _ctx) {
     try {
-      const trader = await getTrader();
+      const trader = await EastMoneyTrader.getInstance();
       await trader.buy(input.stock_code, input.price, input.amount);
       return `买入委托已提交：${input.stock_code}，价格 ${input.price}，数量 ${input.amount}`;
     } catch (error) {
@@ -249,7 +235,7 @@ export const traderSellTool: Tool<{
   },
   async execute(input, _ctx) {
     try {
-      const trader = await getTrader();
+      const trader = await EastMoneyTrader.getInstance();
       await trader.sell(input.stock_code, input.price, input.amount);
       return `卖出委托已提交：${input.stock_code}，价格 ${input.price}，数量 ${input.amount}`;
     } catch (error) {
@@ -277,7 +263,7 @@ export const traderCancelTool: Tool<{
   },
   async execute(input, _ctx) {
     try {
-      const trader = await getTrader();
+      const trader = await EastMoneyTrader.getInstance();
       const success = await (trader as any).cancelEntrust(input.entrust_no);
       if (success) {
         return `委托 ${input.entrust_no} 撤销成功`;
@@ -306,7 +292,7 @@ export const traderStockInfoTool: Tool<{
   },
   async execute(input, _ctx) {
     try {
-      const trader = await getTrader();
+      const trader = await EastMoneyTrader.getInstance();
       const stockInfo = await (trader as any).getStockInfo(input.stock_code);
 
       const result = {

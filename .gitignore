@@ -9,3 +9,6 @@ dist/
 .openclaw-mini
 workspace/
 *.session
+skills/
+.venv/
+requirements.txt

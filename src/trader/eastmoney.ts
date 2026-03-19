@@ -129,6 +129,8 @@ export class EastMoneyTrader extends WebTrader {
     private captchaRecognizer: CaptchaRecognizerObject;
     private client: Axios;
     private stockCache: StockCacheInfo = {};
+    private static instance: EastMoneyTrader | null = null;
+
 
     // HTTP会话
     private session: any; // 使用简单的对象存储cookie等，实际可使用fetch with cookie jar
@@ -158,11 +160,22 @@ export class EastMoneyTrader extends WebTrader {
     /**
      * 等待登录完成
      */
-    async ensureLoggedIn(): Promise<void> {
+    private async ensureLoggedIn(): Promise<void> {
         if (!this.accountConfig) {
             throw new NotLoginError('未配置交易账户，请设置 STOCK_EASTMONEY_USERNAME 和 STOCK_EASTMONEY_PASSWORD 环境变量');
         }
         await this.autoLogin();
+    }
+
+    /**
+     * 获取或创建交易客户端实例
+     */
+    static async getInstance(): Promise<EastMoneyTrader> {
+        if (!this.instance) {
+            this.instance = new EastMoneyTrader();
+        }
+        await this.instance.ensureLoggedIn();
+        return this.instance;
     }
 
     /**
@@ -650,7 +663,6 @@ export class EastMoneyTrader extends WebTrader {
      * 买入股票
      */
     async buy(stockCode: string, price: number, amount: number): Promise<void> {
-        await this.ensureLoggedIn();
         return this._trade(stockCode, price, amount, 0, 'B');
     }
 
@@ -658,7 +670,6 @@ export class EastMoneyTrader extends WebTrader {
      * 卖出股票
      */
     async sell(stockCode: string, price: number, amount: number): Promise<void> {
-        await this.ensureLoggedIn();
         return this._trade(stockCode, price, amount, 0, 'S');
     }
 
