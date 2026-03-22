@@ -320,6 +320,26 @@ ANTHROPIC_API_KEY=sk-xxx
 pnpm dev
 ```
 
+### 使用 OpenAI 兼容 API
+
+智谱、DeepSeek、月之暗面 Kimi 等国产大模型均兼容 OpenAI 格式，通过 `provider=openai` + 自定义 `BASE_URL` 即可接入。
+
+以智谱免费模型 GLM-4-Flash 为例：
+
+```env
+OPENCLAW_MINI_PROVIDER=openai
+OPENCLAW_MINI_MODEL=glm-4-flash
+OPENCLAW_MINI_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+OPENCLAW_MINI_REASONING=none
+OPENAI_API_KEY=你的API Key
+```
+
+```bash
+pnpm dev
+```
+
+> `OPENCLAW_MINI_REASONING=none` 用于关闭 extended thinking，不支持该特性的模型需设置此项。
+
 ### Gateway 模式
 
 除了 CLI 直连，还可以通过 Gateway 服务让多个客户端远程访问同一个 Agent：
@@ -353,6 +373,9 @@ pnpm dev -- --provider openai --model gpt-4o
 
 # 使用代理
 pnpm dev -- --base-url https://your-proxy.com/api/anthropic
+
+# 关闭 extended thinking（不支持的模型需设置）
+pnpm dev -- --reasoning none
 ```
 
 ## 使用示例

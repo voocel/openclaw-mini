@@ -169,6 +169,8 @@ async function main() {
   const provider = readFlag(args, "--provider") ?? process.env.OPENCLAW_MINI_PROVIDER ?? "anthropic";
   const model = readFlag(args, "--model") ?? process.env.OPENCLAW_MINI_MODEL;
   const baseUrl = readFlag(args, "--base-url") ?? process.env.OPENCLAW_MINI_BASE_URL;
+  const reasoningFlag = readFlag(args, "--reasoning") ?? process.env.OPENCLAW_MINI_REASONING;
+  const reasoning = reasoningFlag === "none" ? undefined : (reasoningFlag as any) ?? "medium";
   const apiKey = readFlag(args, "--api-key") ?? getEnvApiKey(provider);
   if (!apiKey) {
     console.error(`错误: 未找到 ${provider} 的 API Key，请设置对应环境变量或使用 --api-key 参数`);
@@ -229,7 +231,7 @@ async function main() {
 
   // Banner
   console.log(`${badge("MINI", badgeStyles.system)} ${color("OpenClaw Mini", "bold")}`);
-  console.log(color(`  ${provider}${model ? ` · ${model}` : ""} · ${agentId}`, "dim"));
+  console.log(color(`  ${provider}${model ? ` · ${model}` : ""}${reasoning ? ` · thinking:${reasoning}` : ""} · ${agentId}`, "dim"));
   console.log(color(`  ${workspaceDir}`, "dim"));
   const hints = ["/help 查看命令"];
   if (approval) hints.push(`approval: ${approval.ask}`);
@@ -244,6 +246,7 @@ async function main() {
     ...(baseUrl ? { baseUrl } : {}),
     agentId,
     workspaceDir,
+    reasoning,
     approval,
     onApprovalRequest,
   });
@@ -367,7 +370,7 @@ function readFlag(args: string[], name: string): string | undefined {
   return next.trim() || undefined;
 }
 
-const FLAGS_WITH_VALUE = new Set(["--agent", "--model", "--provider", "--api-key", "--base-url"]);
+const FLAGS_WITH_VALUE = new Set(["--agent", "--model", "--provider", "--api-key", "--base-url", "--reasoning"]);
 
 function resolveSessionIdArg(args: string[]): string | undefined {
   for (let i = 0; i < args.length; i++) {
@@ -409,7 +412,7 @@ async function handleCommand(cmd: string, agent: Agent, sessionKey: string) {
 
   switch (command) {
     case "help":
-      console.log(`命令:\n  /help     显示帮助\n  /reset    重置当前会话\n  /history  显示会话历史\n  /sessions 列出所有会话\n  /quit     退出\n\n启动参数:\n  --approval          启用工具审批 (on-miss 模式)\n  --approval always   每次工具调用都需审批`);
+      console.log(`命令:\n  /help     显示帮助\n  /reset    重置当前会话\n  /history  显示会话历史\n  /sessions 列出所有会话\n  /quit     退出\n\n启动参数:\n  --provider <name>   指定 provider (anthropic/openai/google/groq/...)\n  --model <id>        指定模型 ID\n  --base-url <url>    自定义 API 端点 (代理/自部署)\n  --api-key <key>     API Key\n  --reasoning <level> 思考级别 (minimal/low/medium/high/xhigh/none)\n  --approval          启用工具审批 (on-miss 模式)\n  --approval always   每次工具调用都需审批`);
       break;
 
     case "reset":
