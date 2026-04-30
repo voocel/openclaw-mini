@@ -6,9 +6,9 @@ dist/
 .idea
 .vscode
 .env
-.openclaw-mini
 workspace/
 *.session
 skills/
 .venv/
 requirements.txt
+.openclaw-mini/

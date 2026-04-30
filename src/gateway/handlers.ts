@@ -17,7 +17,7 @@ import type { MiniAgentEvent } from "../agent-events.js";
 import {
   ErrorCodes, errorShape,
   PROTOCOL_VERSION, GATEWAY_METHODS, GATEWAY_EVENTS,
-  TICK_INTERVAL_MS, MAX_PAYLOAD_BYTES,
+  TICK_INTERVAL_MS, MAX_PAYLOAD_BYTES, newId,
   type HelloOk, type ErrorShape,
 } from "./protocol.js";
 
@@ -85,7 +85,7 @@ const handleConnect: Handler = async (params, client, ctx) => {
 
 /**
  * 对齐 openclaw server-methods/chat.ts:
- * 1. 立即返回 { runId } (ACK)
+ * 1. 立即返回 { sessionKey, runId } (ACK)
  * 2. 异步执行 agent.run()
  * 3. agent 事件流 → broadcast("agent") + broadcast("chat" delta/final)
  */
@@ -95,9 +95,10 @@ const handleChatSend: Handler = async (params, _client, ctx) => {
     return { ok: false, error: errorShape(ErrorCodes.INVALID_REQUEST, "message required") };
   }
   const sessionKey = p.sessionKey || "main";
+  const runId = newId();
 
   // 追踪 agent 内部的 runId（通过 agent_start 事件获取）
-  let agentRunId: string | undefined;
+  let agentRunId: string | undefined = runId;
 
   // Delta 限流状态（对齐 openclaw server-chat.ts: 150ms 限流 + 文本累积）
   let deltaBuffer = "";
@@ -138,14 +139,14 @@ const handleChatSend: Handler = async (params, _client, ctx) => {
     }
   });
 
-  ctx.agent.run(sessionKey, p.message)
+  ctx.agent.run(sessionKey, p.message, { runId })
     .catch((err) => {
       // 广播运行时错误，确保客户端能收到错误通知
       ctx.broadcast("chat", { runId: agentRunId, sessionKey, state: "error", error: String(err) });
     })
     .finally(() => unsub());
 
-  return { ok: true, payload: { sessionKey } };
+  return { ok: true, payload: { sessionKey, runId } };
 };
 
 // ============== chat.history ==============

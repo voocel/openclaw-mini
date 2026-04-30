@@ -2,15 +2,49 @@
   "name": "openclaw-mini",
   "version": "0.1.0",
   "description": "OpenClaw 核心架构的极简复现，用于学习 AI Agent 的系统级设计",
+  "keywords": [
+    "openclaw",
+    "agent",
+    "llm",
+    "ai-agent",
+    "gateway",
+    "typescript",
+    "teaching"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/voocel/openclaw-mini#readme",
+  "bugs": {
+    "url": "https://github.com/voocel/openclaw-mini/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voocel/openclaw-mini.git"
+  },
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist/**",
+    "src/**",
+    "examples/**",
+    "workspace-templates/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./dist/src/index.js",
+    "./gateway": "./dist/src/gateway/index.js"
+  },
   "bin": {
-    "openclaw-mini": "dist/cli.js"
+    "openclaw-mini": "dist/src/cli.js"
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
-    "start": "node dist/cli.js",
+    "start": "node dist/src/cli.js",
+    "test": "node --import tsx --test test/*.test.ts",
+    "prepack": "npm run build",
+    "pack:check": "npm pack --dry-run",
     "chat": "tsx src/cli.ts chat",
     "gateway": "tsx src/gateway/gateway-cli.ts serve",
     "gateway:serve": "tsx src/gateway/gateway-cli.ts serve",
@@ -19,7 +53,10 @@
     "example": "tsx examples/basic.ts",
     "feishu": "tsx examples/feishu-channel.ts",
     "trader:test": "npx tsx examples/trader-example.ts",
-    "captch:test": "npx tsx examples/captcha-recognizer.ts"
+    "captch:test": "npx tsx examples/captcha-recognizer.ts",
+    "example:basic": "tsx examples/basic.ts",
+    "example:custom-tools": "tsx examples/custom-tools.ts",
+    "example:gateway": "tsx examples/gateway-roundtrip.ts"
   },
   "dependencies": {
     "@larksuiteoapi/node-sdk": "^1.59.0",
@@ -39,5 +76,9 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@10.23.0"
 }

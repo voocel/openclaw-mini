@@ -158,7 +158,7 @@ export class MemoryManager {
   private entries: MemoryEntry[] = [];
   private loaded = false;
 
-  constructor(baseDir: string = "./.mini-agent/memory") {
+  constructor(baseDir: string = "./.openclaw-mini/memory") {
     this.baseDir = baseDir;
   }
 

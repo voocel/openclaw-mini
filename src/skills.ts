@@ -315,7 +315,7 @@ export class SkillManager {
 
   /**
    * @param workspaceDir 工作目录（最高优先级 skill 来源）
-   * @param managedDir 用户全局目录（~/.mini-agent/skills/）
+   * @param managedDir 用户全局目录（~/.openclaw-mini/skills/）
    */
   constructor(workspaceDir: string, managedDir?: string) {
     this.workspaceDir = workspaceDir;
@@ -323,7 +323,7 @@ export class SkillManager {
       managedDir ??
       path.join(
         process.env.HOME || process.env.USERPROFILE || ".",
-        ".mini-agent",
+        ".openclaw-mini",
         "skills",
       );
   }

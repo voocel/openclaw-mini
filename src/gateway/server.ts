@@ -17,6 +17,7 @@
  */
 
 import http from "node:http";
+import type { AddressInfo } from "node:net";
 import { WebSocketServer, WebSocket } from "ws";
 import type { Agent } from "../agent.js";
 import {
@@ -73,7 +74,7 @@ function createBroadcaster(clients: Set<GwClient>): BroadcastFn {
 // ============== 启动服务 ==============
 
 export async function startGatewayServer(opts: GatewayServerOptions): Promise<GatewayServer> {
-  const port = opts.port ?? 18789;
+  const requestedPort = opts.port ?? 18789;
   const clients = new Set<GwClient>();
   const nonces = new Map<string, string>();
   const broadcast = createBroadcaster(clients);
@@ -167,8 +168,10 @@ export async function startGatewayServer(opts: GatewayServerOptions): Promise<Ga
   // 监听
   await new Promise<void>((resolve, reject) => {
     httpServer.on("error", reject);
-    httpServer.listen(port, () => resolve());
+    httpServer.listen(requestedPort, "127.0.0.1", () => resolve());
   });
+  const address = httpServer.address() as AddressInfo | null;
+  const port = address?.port ?? requestedPort;
 
   // 优雅关闭（对齐 openclaw server-close.ts: createGatewayCloseHandler）
   const close = (opts?: { restartExpectedMs?: number }) => {

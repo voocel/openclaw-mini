@@ -97,7 +97,7 @@ export { convertMessagesToPi } from "./message-convert.js";
 // [扩展层] Extended - openclaw 特有，非通用必需
 // =============================================
 
-// Memory — 长期记忆 (关键词检索 + 时间衰减)
+// Memory — 长期记忆 (关键词检索 + 相关性排序)
 export {
   MemoryManager,
   type MemoryEntry,

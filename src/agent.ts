@@ -177,7 +177,7 @@ export interface AgentConfig {
 
 export interface RunResult {
   /** 本次运行 ID */
-  runId?: string;
+  runId: string;
   /** 最终文本 */
   text: string;
   /** 总轮次 */
@@ -383,7 +383,7 @@ export class Agent {
 
     // 初始化子系统
     this.sessions = new SessionManager(config.sessionDir);
-    this.memory = new MemoryManager(config.memoryDir ?? "./.mini-agent/memory");
+    this.memory = new MemoryManager(config.memoryDir ?? "./.openclaw-mini/memory");
     this.context = new ContextLoader(this.workspaceDir);
     this.skills = new SkillManager(this.workspaceDir);
     this.heartbeat = new HeartbeatManager(this.workspaceDir, {
@@ -557,7 +557,8 @@ export class Agent {
       throw new Error("子代理会话不能再触发子代理");
     }
     const childSessionKey = this.buildSubagentSessionKey(this.agentId);
-    const runPromise = this.run(childSessionKey, params.task);
+    const childRunId = crypto.randomUUID();
+    const runPromise = this.run(childSessionKey, params.task, { runId: childRunId });
     runPromise
       .then(async (result) => {
         const summary = result.text.slice(0, 600);
@@ -588,7 +589,7 @@ export class Agent {
         });
       });
     return {
-      runId: childSessionKey,
+      runId: childRunId,
       sessionKey: childSessionKey,
     };
   }
@@ -643,6 +644,7 @@ export class Agent {
   async run(
     sessionIdOrKey: string,
     userMessage: string,
+    opts?: { runId?: string },
   ): Promise<RunResult> {
     const sessionKey = resolveSessionKey({
       agentId: this.agentId,
@@ -654,7 +656,7 @@ export class Agent {
 
     return enqueueInLane(sessionLane, () =>
       enqueueInLane(globalLane, async () => {
-        const runId = crypto.randomUUID();
+        const runId = opts?.runId?.trim() || crypto.randomUUID();
 
         // AbortController: 每次 run 创建独立的 controller
         const runAbortController = new AbortController();
